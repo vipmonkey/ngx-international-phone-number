@@ -41,13 +41,10 @@ export class PhoneNumberComponent
     @Input() placeholder = 'Enter phone number'; // default
     @Input() errorTextRequired = 'Phonenumber is reqired';
     @Input() maxlength = 15; // default
-
     @Input() defaultCountry: string;
     @Input() allowDropdown = true;
     @Input() type = 'text';
-
-    @input() formControl: FormControl;
-
+    @Input() formControl = new FormControl();
     @Input() allowedCountries: Country[];
 
     @Output() onCountryCodeChanged: EventEmitter<any> = new EventEmitter();
@@ -204,7 +201,7 @@ export class PhoneNumberComponent
             }
         };
 
-        if (c.required && !value) {
+        if (c.hasError('reqired')) {
             // if (value && selectedDialCode)
             //     value = value.replace(/\s/g, '').replace(selectedDialCode, '');
 
