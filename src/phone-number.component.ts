@@ -1,25 +1,16 @@
 import {
-    Component,
-    ElementRef,
-    forwardRef,
-    HostListener,
-    Input,
-    OnInit,
-    Output,
-    EventEmitter,
-    ViewChild
+    Component, ElementRef, forwardRef, HostListener,
+    Input, OnInit, Output, EventEmitter, ViewChild
 } from '@angular/core';
 import {
-    ControlValueAccessor,
-    FormControl,
-    Validator,
-    ValidationErrors,
-    NG_VALIDATORS,
-    NG_VALUE_ACCESSOR
+    ControlValueAccessor, FormControl, Validator,
+    ValidationErrors, NG_VALIDATORS, NG_VALUE_ACCESSOR
 } from '@angular/forms';
 import * as glibphone from 'google-libphonenumber';
-import { Country } from './country.model';
-import { CountryService } from './country.service';
+import {Country} from './country.model';
+import {CountryService} from './country.service';
+import {MatSelectModule} from '@angular/material/select';
+import {MatInputModule} from '@angular/material/input';
 
 const PLUS = '+';
 
@@ -48,12 +39,14 @@ export class PhoneNumberComponent
     implements OnInit, ControlValueAccessor, Validator {
     // input
     @Input() placeholder = 'Enter phone number'; // default
+    @Input() errorTextRequired = 'Phonenumber is reqired';
     @Input() maxlength = 15; // default
 
     @Input() defaultCountry: string;
-    @Input() required: boolean;
     @Input() allowDropdown = true;
     @Input() type = 'text';
+
+    @input() formControl: FormControl;
 
     @Input() allowedCountries: Country[];
 
@@ -112,26 +105,6 @@ export class PhoneNumberComponent
     }
 
     /**
-     * Opens the country selection dropdown
-     */
-    displayDropDown() {
-        if (this.allowDropdown) {
-            this.showDropdown = !this.showDropdown;
-            this.countryFilter = '';
-        }
-    }
-
-    /**
-     * Hides the country selection dropdown
-     * @param event
-     */
-    hideDropdown(event: Event) {
-        if (!this.phoneComponent.nativeElement.contains(event.target)) {
-            this.showDropdown = false;
-        }
-    }
-
-    /**
      * Sets the selected country code to given country
      * @param event
      * @param countryCode
@@ -157,17 +130,6 @@ export class PhoneNumberComponent
         }
 
         this.updateValue();
-    }
-
-    /**
-     * shows the dropdown with keyboard event
-     * @param event
-     */
-    @HostListener('document:keypress', ['$event'])
-    handleKeyboardEvent(event: KeyboardEvent) {
-        if (this.showDropdown) {
-            this.countryFilter = `${this.countryFilter}${event.key}`;
-        }
     }
 
     /**
@@ -242,7 +204,7 @@ export class PhoneNumberComponent
             }
         };
 
-        if (this.required && !value) {
+        if (c.required && !value) {
             // if (value && selectedDialCode)
             //     value = value.replace(/\s/g, '').replace(selectedDialCode, '');
 
@@ -278,8 +240,6 @@ export class PhoneNumberComponent
      * @param countryCode
      */
     private updatePhoneInput(countryCode: string) {
-        this.showDropdown = false;
-
         let newInputValue: string = PhoneNumberComponent.startsWithPlus(
             this.phoneNumber
         )
@@ -307,7 +267,10 @@ export class PhoneNumberComponent
      * Returns the selected country's dialcode
      */
     public getSelectedCountryDialCode(): string {
-        if (this.selectedCountry) { return PLUS + this.selectedCountry.dialCode; };
+        if (this.selectedCountry) {
+            return PLUS + this.selectedCountry.dialCode;
+        }
+        ;
         return null;
     }
 }
