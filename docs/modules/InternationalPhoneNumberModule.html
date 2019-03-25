@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>ngx-international-phone-numbe</title>
+        <title>vipm-ngx-international-phone-numbe</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -13,7 +13,7 @@
     <body>
 
         <div class="navbar navbar-default navbar-fixed-top visible-xs">
-            <a href="../" class="navbar-brand">ngx-international-phone-numbe</a>
+            <a href="../" class="navbar-brand">vipm-ngx-international-phone-numbe</a>
             <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
         </div>
 
@@ -289,7 +289,7 @@
 
                         <tr>
                             <td class="col-md-4">
-                                    <div class="io-line">Defined in <a href="" data-line="27" class="link-to-prism">src/phone-number.module.ts:27</a></div>
+                                    <div class="io-line">Defined in <a href="" data-line="31" class="link-to-prism">src/phone-number.module.ts:31</a></div>
                             </td>
                         </tr>
 
@@ -318,12 +318,16 @@ import { PhoneNumberComponent } from &#x27;./phone-number.component&#x27;;
 import { OnlyNumberDirective } from &#x27;./only-number.directive&#x27;;
 import { CountryPipe } from &#x27;./country.pipe&#x27;;
 import { CountryService } from &#x27;./country.service&#x27;;
+import {MatSelectModule} from &#x27;@angular/material/select&#x27;;
+import {MatInputModule} from &#x27;@angular/material/input&#x27;;
 
 @NgModule({
     imports: [
         CommonModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        MatSelectModule,
+        MatInputModule
     ],
     declarations: [
         PhoneNumberComponent,

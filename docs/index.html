@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>ngx-international-phone-numbe</title>
+        <title>vipm-ngx-international-phone-numbe</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -13,7 +13,7 @@
     <body>
 
         <div class="navbar navbar-default navbar-fixed-top visible-xs">
-            <a href="./" class="navbar-brand">ngx-international-phone-numbe</a>
+            <a href="./" class="navbar-brand">vipm-ngx-international-phone-numbe</a>
             <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
         </div>
 
@@ -30,51 +30,21 @@
                <div class="content getting-started">
                    <div class="content-data">
 
-<h1 id="ngx-international-phone-number">ngx-international-phone-number</h1>
-<p>A simple international telephone number input. Allows you to create a phone number field with country dropdown. </p>
-<p>This is re-written version (with enhancement) of <a href="https://github.com/kondi0/ng4-intl-phone/">ng4-intl-phone</a>. So credit should go to <a href="https://github.com/kondi0">kondi0</a>.</p>
-<h2 id="installation">Installation</h2>
-<p>To install this library, run:</p>
-<div><pre class="line-numbers"><code class="language-bash">$ npm install ngx-international-phone-number --save</code></pre></div><h2 id="consuming-your-library">Consuming your library</h2>
-<p>Once you have installed it you can import <code>InternationalPhoneNumberModule</code> from <code>ngx-international-phone-number</code> in any application module. E.g.</p>
-<div><pre class="line-numbers"><code class="language-typescript">import { BrowserModule } from &#39;&#64;angular/platform-browser&#39;;
-import { NgModule } from &#39;&#64;angular/core&#39;;
-
-import { AppComponent } from &#39;./app.component&#39;;
-
-// Import your library
-import { InternationalPhoneNumberModule } from &#39;ngx-international-phone-number&#39;;
-
-&#64;NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-
-    // InternationalPhoneNumberModule module
-    InternationalPhoneNumberModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }</code></pre></div><p>Once it is imported, you can use <code>international-phone-number</code>:</p>
-<div><pre class="line-numbers"><code class="language-xml">&lt;!-- app.component.html --&gt;
-&lt;form name=&quot;sample-form&quot; (ngSubmit)=&quot;submit()&quot; #f=&quot;ngForm&quot;&gt;
- &lt;international-phone-number [(ngModel)]=&quot;model.phone_number&quot; placeholder=&quot;Enter phone number&quot; [maxlength]=&quot;20&quot; [defaultCountry]=&quot;&#39;in&#39;&quot; [required]=&quot;true&quot; #phoneNumber=&quot;ngModel&quot; name=&quot;phone_number&quot; [allowedCountries]=&quot;[&#39;in&#39;, &#39;ca&#39;, &#39;us&#39;]&quot;&gt;&lt;/international-phone-number&gt;
-
-  &lt;div *ngIf=&quot;f.submitted &amp;&amp; !phoneNumber.valid&quot; class=&quot;help-block&quot;&gt;Phone number is required and should be valid&lt;/div&gt;
-  &lt;button type=&quot;submit&quot;&gt;Submit&lt;/button&gt;
-&lt;/form&gt;</code></pre></div><h3 id="attributes-options-">Attributes/Options:</h3>
-<div><pre class="line-numbers"><code class="language-none">   defaultCountryCode : An ISO 639-1 country code can be provided to set default country selected.
-   placeholder: A placeholder text which would be displayed in input widget
-   required: Indicates whether it&#39;s required or not
-   allowDropdown: Indicates whether to allow selecting country from dropdown
-   allowedCountries: A list of countries (iso codes) that would get display in country dropdown. E.g. [allowedCountries]=&quot;[&#39;in&#39;, &#39;ca&#39;, &#39;us&#39;]&quot; would only show Canada, India and US. If not provided, all the countries would get displayed.</code></pre></div><h2 id="troubleshooting-">Troubleshooting:</h2>
-<p>If you are getting error &quot;Can&#39;t resolve &#39;google-libphonenumber&#39;&quot; while building with aot, try to install google-libphonenumber. Run npm install <a href="mailto:google-libphonenumber@3.0.9">google-libphonenumber@3.0.9</a> --save</p>
-<h2 id="authors">Authors</h2>
+<h1 id="do-not-use-vip-ngx-international-phone-number">DO NOT USE! vip-ngx-international-phone-number</h1>
+<p>Testing on a fork of <a href="https://github.com/nikhiln/ngx-international-phone-number">ngx-international-phone-number</a></p>
+<p>Not supported, </p>
+<p>Changes not fully documented!!</p>
+<h2 id="use-original-ngx-international-phone-number">USE ORIGINAL! <a href="https://github.com/nikhiln/ngx-international-phone-number">ngx-international-phone-number</a></h2>
+<h2 id="some-of-the-changes">Some of the changes</h2>
+<ul>
+<li>Moved to Angular material inputs</li>
+<li>Added posibility for external geoip loockup to replace default country</li>
+<li>uses FormControl</li>
+<li>and more </li>
+</ul>
+<h2 id="original-authors">Original Authors</h2>
 <div><pre class="line-numbers"><code class="language-none">* Original Author: kondi0
-* Author: nikhiln </code></pre></div><h2 id="license">License</h2>
+* Author: nikhiln </code></pre></div><h2 id="original-license">Original License</h2>
 <p>MIT</p>
 
 
