@@ -1,9 +1,11 @@
-# vip-ngx-international-phone-number
+# DO NOT USE! vip-ngx-international-phone-number
 Testing on a fork of [ngx-international-phone-number](https://github.com/nikhiln/ngx-international-phone-number)
-Non supported, changes not documented!!
-#DO NOT USE! 
 
-#USE ORIGINAL! [ngx-international-phone-number](https://github.com/nikhiln/ngx-international-phone-number)
+Not supported, 
+
+Changes not documented!!
+
+##USE ORIGINAL! [ngx-international-phone-number](https://github.com/nikhiln/ngx-international-phone-number)
 
 
 
