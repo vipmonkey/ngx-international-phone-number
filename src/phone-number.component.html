@@ -21,8 +21,5 @@
     <mat-form-field>
         <input matInput [formControl]="formControl" [placeholder]="placeholder" [type]="type" validate
                #phoneNumberInput>
-        <mat-error *ngIf="formControl.hasError('phoneEmptyError') && formControl.dirty && formControl.touched">
-            {{errorTextEmpty}}
-        </mat-error>
     </mat-form-field>
 </div>

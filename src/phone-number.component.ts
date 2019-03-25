@@ -36,11 +36,11 @@ export class PhoneNumberComponent
     implements OnInit, ControlValueAccessor, Validator {
     // input
     @Input() placeholder = 'Enter phone number'; // default
-    @Input() errorTextRequired = 'Phone number is required';
     @Input() errorTextEmpty = 'Phone number is required';
     @Input() defaultCountry: string;
     @Input() type = 'text';
     @Input() formControl = new FormControl('', [Validators.maxLength(20)]);
+    @Input() formControlName = new FormControl('', [Validators.maxLength(20)]);
     @Input() formControlCountry = new FormControl('', [Validators.required]);
     @Input() allowedCountries: Country[];
     @Input() geoLookupAddr = '';
@@ -122,6 +122,7 @@ export class PhoneNumberComponent
             this.geoLookup();
         }
 
+        console.log(this.formControlName);
 
         this.formControlCountry.valueChanges.subscribe(
             (countryCode) => {
