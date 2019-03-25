@@ -5,7 +5,7 @@ Not supported,
 
 Changes not documented!!
 
-##USE ORIGINAL! [ngx-international-phone-number](https://github.com/nikhiln/ngx-international-phone-number)
+## USE ORIGINAL! [ngx-international-phone-number](https://github.com/nikhiln/ngx-international-phone-number)
 
 
 
