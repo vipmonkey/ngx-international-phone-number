@@ -5,12 +5,16 @@ import { PhoneNumberComponent } from './phone-number.component';
 import { OnlyNumberDirective } from './only-number.directive';
 import { CountryPipe } from './country.pipe';
 import { CountryService } from './country.service';
+import {MatSelectModule} from '@angular/material/select';
+import {MatInputModule} from '@angular/material/input';
 
 @NgModule({
     imports: [
         CommonModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        MatSelectModule,
+        MatInputModule
     ],
     declarations: [
         PhoneNumberComponent,

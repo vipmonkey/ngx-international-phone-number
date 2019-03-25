@@ -2,16 +2,20 @@ import { ElementRef, OnInit, EventEmitter } from '@angular/core';
 import { ControlValueAccessor, FormControl, Validator, ValidationErrors } from '@angular/forms';
 import { Country } from './country.model';
 import { CountryService } from './country.service';
+import { HttpClient } from '@angular/common/http';
 export declare class PhoneNumberComponent implements OnInit, ControlValueAccessor, Validator {
     private countryService;
+    private httpClient;
     placeholder: string;
     errorTextRequired: string;
-    maxlength: number;
+    errorTextEmpty: string;
     defaultCountry: string;
-    allowDropdown: boolean;
     type: string;
     formControl: FormControl;
+    formControlCountry: FormControl;
     allowedCountries: Country[];
+    geoLookupAddr: string;
+    geoLookupField: string;
     onCountryCodeChanged: EventEmitter<any>;
     phoneComponent: ElementRef;
     onTouch: Function;
@@ -19,8 +23,7 @@ export declare class PhoneNumberComponent implements OnInit, ControlValueAccesso
     countries: Country[];
     selectedCountry: Country;
     countryFilter: string;
-    showDropdown: boolean;
-    phoneNumber: string;
+    preventCircular: boolean;
     value: string;
     phoneNumberInput: ElementRef;
     /**
@@ -33,19 +36,10 @@ export declare class PhoneNumberComponent implements OnInit, ControlValueAccesso
      * @param foundPrefixes
      */
     private static reducePrefixes;
-    constructor(countryService: CountryService, phoneComponent: ElementRef);
+    constructor(countryService: CountryService, phoneComponent: ElementRef, httpClient: HttpClient);
+    writeValue(obj: any): void;
+    private geoLookup;
     ngOnInit(): void;
-    /**
-     * Sets the selected country code to given country
-     * @param event
-     * @param countryCode
-     */
-    updateSelectedCountry(event: Event, countryCode: string): void;
-    /**
-     * Updates the phone number
-     * @param event
-     */
-    updatePhoneNumber(event: Event): void;
     /**
      * @param prefix
      */
@@ -64,11 +58,6 @@ export declare class PhoneNumberComponent implements OnInit, ControlValueAccesso
      * @param fn
      */
     registerOnChange(fn: Function): void;
-    /**
-     *
-     * @param value
-     */
-    writeValue(value: string): void;
     /**
      * Validation
      * @param c

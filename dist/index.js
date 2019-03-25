@@ -1,7 +1,10 @@
 import { Component, Directive, ElementRef, EventEmitter, HostListener, Injectable, Input, NgModule, Output, Pipe, ViewChild, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PhoneNumberUtil } from 'google-libphonenumber';
+import { HttpClient } from '@angular/common/http';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
 
 /**
  * @fileoverview added by tsickle
@@ -1827,19 +1830,21 @@ var VALIDATOR = {
     multi: true
 };
 var PhoneNumberComponent = /** @class */ (function () {
-    function PhoneNumberComponent(countryService, phoneComponent) {
+    function PhoneNumberComponent(countryService, phoneComponent, httpClient) {
         this.countryService = countryService;
+        this.httpClient = httpClient;
         // input
         this.placeholder = 'Enter phone number'; // default
         // default
-        this.errorTextRequired = 'Phonenumber is reqired';
-        this.maxlength = 15; // default
-        this.allowDropdown = true;
+        this.errorTextRequired = 'Phone number is required';
+        this.errorTextEmpty = 'Phone number is required';
         this.type = 'text';
-        this.formControl = new FormControl();
+        this.formControl = new FormControl('', [Validators.maxLength(20)]);
+        this.formControlCountry = new FormControl('', [Validators.required]);
+        this.geoLookupAddr = '';
+        this.geoLookupField = '';
         this.onCountryCodeChanged = new EventEmitter();
-        this.showDropdown = false;
-        this.phoneNumber = '';
+        this.preventCircular = false;
         this.value = '';
         this.phoneComponent = phoneComponent;
     }
@@ -1886,12 +1891,43 @@ var PhoneNumberComponent = /** @class */ (function () {
         return reducedPrefixes;
     };
     /**
+     * @param {?} obj
+     * @return {?}
+     */
+    PhoneNumberComponent.prototype.writeValue = /**
+     * @param {?} obj
+     * @return {?}
+     */
+    function (obj) {
+    };
+    /**
+     * @private
+     * @return {?}
+     */
+    PhoneNumberComponent.prototype.geoLookup = /**
+     * @private
+     * @return {?}
+     */
+    function () {
+        var _this = this;
+        this.httpClient.get(this.geoLookupAddr).subscribe(function (res) {
+            if (typeof res[_this.geoLookupField] === 'string') {
+                /** @type {?} */
+                var geoCountry = _this.countries.find(function (country) { return country.countryCode === res[_this.geoLookupField].toLowerCase(); });
+                if (geoCountry) {
+                    _this.defaultCountry = geoCountry.countryCode;
+                }
+            }
+        });
+    };
+    /**
      * @return {?}
      */
     PhoneNumberComponent.prototype.ngOnInit = /**
      * @return {?}
      */
     function () {
+        var _this = this;
         if (this.allowedCountries && this.allowedCountries.length) {
             this.countries = this.countryService.getCountriesByISO(this.allowedCountries);
         }
@@ -1899,55 +1935,15 @@ var PhoneNumberComponent = /** @class */ (function () {
             this.countries = this.countryService.getCountries();
         }
         this.orderCountriesByName();
-    };
-    /**
-     * Sets the selected country code to given country
-     * @param event
-     * @param countryCode
-     */
-    /**
-     * Sets the selected country code to given country
-     * @param {?} event
-     * @param {?} countryCode
-     * @return {?}
-     */
-    PhoneNumberComponent.prototype.updateSelectedCountry = /**
-     * Sets the selected country code to given country
-     * @param {?} event
-     * @param {?} countryCode
-     * @return {?}
-     */
-    function (event, countryCode) {
-        var _this = this;
-        event.preventDefault();
-        this.updatePhoneInput(countryCode);
-        this.onCountryCodeChanged.emit(countryCode);
-        this.updateValue();
-        // focus on phone number input field
-        setTimeout(function () { return _this.phoneNumberInput.nativeElement.focus(); });
-    };
-    /**
-     * Updates the phone number
-     * @param event
-     */
-    /**
-     * Updates the phone number
-     * @param {?} event
-     * @return {?}
-     */
-    PhoneNumberComponent.prototype.updatePhoneNumber = /**
-     * Updates the phone number
-     * @param {?} event
-     * @return {?}
-     */
-    function (event) {
-        if (PhoneNumberComponent.startsWithPlus(this.phoneNumber)) {
-            this.findPrefix(this.phoneNumber.split(PLUS)[1]);
+        if (this.geoLookupAddr.length > 0) {
+            this.geoLookup();
         }
-        else {
-            this.selectedCountry = null;
-        }
-        this.updateValue();
+        this.formControlCountry.valueChanges.subscribe(function (countryCode) {
+            if (!_this.preventCircular) {
+                _this.updatePhoneInput(countryCode);
+                setTimeout(function () { return _this.phoneNumberInput.nativeElement.focus(); });
+            }
+        });
     };
     /**
      * @param prefix
@@ -1969,6 +1965,7 @@ var PhoneNumberComponent = /** @class */ (function () {
         });
         if (foundPrefixes && foundPrefixes.length) {
             this.selectedCountry = PhoneNumberComponent.reducePrefixes(foundPrefixes);
+            this.formControlCountry.setValue(this.selectedCountry.countryCode);
         }
         else {
             this.selectedCountry = null;
@@ -2007,6 +2004,7 @@ var PhoneNumberComponent = /** @class */ (function () {
      * @return {?}
      */
     function (fn) {
+        console.log('registerOnTouched');
         this.onTouch = fn;
     };
     /**
@@ -2024,34 +2022,8 @@ var PhoneNumberComponent = /** @class */ (function () {
      * @return {?}
      */
     function (fn) {
+        console.log('registerOnChange');
         this.onModelChange = fn;
-    };
-    /**
-     *
-     * @param value
-     */
-    /**
-     *
-     * @param {?} value
-     * @return {?}
-     */
-    PhoneNumberComponent.prototype.writeValue = /**
-     *
-     * @param {?} value
-     * @return {?}
-     */
-    function (value) {
-        this.value = value || '';
-        this.phoneNumber = this.value;
-        if (PhoneNumberComponent.startsWithPlus(this.value)) {
-            this.findPrefix(this.value.split(PLUS)[1]);
-            if (this.selectedCountry) {
-                this.updatePhoneInput(this.selectedCountry.countryCode);
-            }
-        }
-        if (this.defaultCountry) {
-            this.updatePhoneInput(this.defaultCountry);
-        }
     };
     /**
      * Validation
@@ -2070,7 +2042,6 @@ var PhoneNumberComponent = /** @class */ (function () {
     function (c) {
         /** @type {?} */
         var value = c.value;
-        // let selectedDialCode = this.getSelectedCountryDialCode();
         /** @type {?} */
         var validationError = {
             phoneEmptyError: {
@@ -2078,12 +2049,22 @@ var PhoneNumberComponent = /** @class */ (function () {
             }
         };
         if (c.hasError('reqired')) {
-            // if (value && selectedDialCode)
-            //     value = value.replace(/\s/g, '').replace(selectedDialCode, '');
-            // if (!value) return validationError;
             return validationError;
         }
         if (value) {
+            if (this.defaultCountry && !this.selectedCountry && value[0] !== PLUS) {
+                this.updatePhoneInput(this.defaultCountry);
+            }
+            else {
+                if (PhoneNumberComponent.startsWithPlus(value)) {
+                    this.preventCircular = true;
+                    this.findPrefix(value.split(PLUS)[1]);
+                    this.preventCircular = false;
+                }
+                if (this.selectedCountry && value[0] !== PLUS) {
+                    this.updatePhoneInput(this.selectedCountry.countryCode);
+                }
+            }
             // validating number using the google's lib phone
             /** @type {?} */
             var phoneUtil = PhoneNumberUtil.getInstance();
@@ -2114,7 +2095,7 @@ var PhoneNumberComponent = /** @class */ (function () {
      * @return {?}
      */
     function () {
-        this.value = this.phoneNumber.replace(/ /g, '');
+        this.value = this.formControl.value.replace(/ /g, '');
         this.onModelChange(this.value);
         this.onTouch();
     };
@@ -2136,17 +2117,19 @@ var PhoneNumberComponent = /** @class */ (function () {
      */
     function (countryCode) {
         /** @type {?} */
-        var newInputValue = PhoneNumberComponent.startsWithPlus(this.phoneNumber)
-            ? "" + this.phoneNumber
+        var newInputValue = PhoneNumberComponent.startsWithPlus(this.formControl.value)
+            ? "" + this.formControl.value
                 .split(PLUS)[1]
-                .substr(this.selectedCountry.dialCode.length, this.phoneNumber.length)
-            : this.phoneNumber;
+                .substr(this.selectedCountry.dialCode.length, this.formControl.value.length)
+            : this.formControl.value;
         this.selectedCountry = this.countries.find(function (country) { return country.countryCode === countryCode; });
         if (this.selectedCountry) {
-            this.phoneNumber = "" + PLUS + this.selectedCountry.dialCode + " " + newInputValue.replace(/ /g, '');
+            this.formControl.setValue("" + PLUS + this.selectedCountry.dialCode + " " + newInputValue.replace(/ /g, ''));
+            this.updateValue();
         }
         else {
-            this.phoneNumber = "" + newInputValue.replace(/ /g, '');
+            this.formControl.setValue("" + newInputValue.replace(/ /g, ''));
+            this.updateValue();
         }
     };
     /**
@@ -2164,35 +2147,35 @@ var PhoneNumberComponent = /** @class */ (function () {
         if (this.selectedCountry) {
             return PLUS + this.selectedCountry.dialCode;
         }
-        
         return null;
     };
     PhoneNumberComponent.decorators = [
         { type: Component, args: [{
                     selector: 'international-phone-number',
-                    template: "<div class='phoneWrapper'> <mat-form-field class='flagSelector'> <mat-label> <span class=\"flag flag-{{selectedCountry.countryCode}}\" *ngIf=\"selectedCountry\"></span> <span class=\"defaultCountry\" *ngIf=\"!selectedCountry\"></span> </mat-label> <mat-select> <mat-option *ngFor=\"let country of countries | country: countryFilter\" (click)=\"updateSelectedCountry($event, country.countryCode)\"> <span [class]=\"'flag flag-' + country.countryCode\"></span> <span class=\"country-name\"> {{ country.name }} <span class=\"dial-code\">+ {{ country.dialCode}}</span> </span> </mat-option> </mat-select> </mat-form-field> <mat-form-field> <input matInput [formControl]=\"formContol\" [attr.maxlength]=\"maxlength\" [(ngModel)]=\"phoneNumber\" (ngModelChange)=\"updatePhoneNumber($event)\" [placeholder]=\"placeholder\" [type]=\"type\" #phoneNumberInput> <mat-error *ngIf=\"formContol.hasError('required')\"> {{errorTextRequired}} </mat-error> </mat-form-field> </div> ",
+                    template: "<div class='phoneWrapper'> <mat-form-field class='flagSelector'> <mat-label> <!--<span class=\"flag flag-{{selectedCountry.countryCode}}\" *ngIf=\"selectedCountry\"></span>--> <span class=\"defaultCountry\" *ngIf=\"!selectedCountry\"></span> </mat-label> <mat-select [formControl]=\"formControlCountry\"> <mat-select-trigger> <span class=\"flag flag-{{selectedCountry.countryCode}}\" *ngIf=\"selectedCountry\"></span> <span class=\"defaultCountry\" *ngIf=\"!selectedCountry\"></span> </mat-select-trigger> <mat-option *ngFor=\"let country of countries | country: countryFilter\" [value]=\"country.countryCode\"> <span [class]=\"'flag flag-' + country.countryCode\"></span> <span class=\"country-name\"> {{ country.name }} <span class=\"dial-code\">+ {{ country.dialCode}}</span> </span> </mat-option> </mat-select> </mat-form-field> <mat-form-field> <input matInput [formControl]=\"formControl\" [placeholder]=\"placeholder\" [type]=\"type\" validate #phoneNumberInput> <mat-error *ngIf=\"formControl.hasError('phoneEmptyError') && formControl.dirty && formControl.touched\"> {{errorTextEmpty}} </mat-error> </mat-form-field> </div> ",
                     styles: [".flagSelector { max-width: 40px; } .defaultCountry { background: url(\"https://res.cloudinary.com/dvbuhh0bl/image/upload/c_scale,h_15,w_15/v1495279723/default_tmey2r.png\") no-repeat; display: inline-block; width: 15px; height: 15px; } .country-name { margin-left: 6px; } .dial-code { color: #999; } ",
                         "/*! * Generated with CSS Flag Sprite generator (https://www.flag-sprites.com/) */.flag{display:inline-block;width:16px;height:11px;background:url('https://res.cloudinary.com/dvbuhh0bl/image/upload/v1495279723/flags_boi3c5.png') no-repeat}.flag.flag-af{background-position:-32px 0}.flag.flag-ky{background-position:-128px -77px}.flag.flag-in{background-position:-64px -66px}.flag.flag-mm{background-position:-192px -88px}.flag.flag-td{background-position:-240px -132px}.flag.flag-dm{background-position:-80px -33px}.flag.flag-se{background-position:-208px -121px}.flag.flag-pr{background-position:-224px -110px}.flag.flag-bj{background-position:-112px -11px}.flag.flag-gr{background-position:-48px -55px}.flag.flag-um{background-position:-256px -143px}.flag.flag-ps{background-position:-240px -110px}.flag.flag-fi{background-position:0 -44px}.flag.flag-kr{background-position:-80px -77px}.flag.flag-nl{background-position:-240px -99px}.flag.flag-bo{background-position:-160px -11px}.flag.flag-bf{background-position:-48px -11px}.flag.flag-ba{background-position:-256px 0}.flag.flag-ax{background-position:-224px 0}.flag.flag-pf{background-position:-112px -110px}.flag.flag-eg{background-position:-160px -33px}.flag.flag-sb{background-position:-144px -121px}.flag.flag-dk{background-position:-64px -33px}.flag.flag-ci{background-position:-112px -22px}.flag.flag-ic{background-position:-240px -55px}.flag.flag-cl{background-position:-144px -22px}.flag.flag-zw{background-position:-32px -165px}.flag.flag-my{background-position:-112px -99px}.flag.flag-li{background-position:-208px -77px}.flag.flag-mc{background-position:-80px -88px}.flag.flag-fo{background-position:-64px -44px}.flag.flag-vu{background-position:-144px -154px}.flag.flag-al{background-position:-80px 0}.flag.flag-ge{background-position:-144px -44px}.flag.flag-somaliland{background-position:-96px -132px}.flag.flag-am{background-position:-96px 0}.flag.flag-tf{background-position:-256px -132px}.flag.flag-ni{background-position:-224px -99px}.flag.flag-tn{background-position:-112px -143px}.flag.flag-lv{background-position:-32px -88px}.flag.flag-vi{background-position:-112px -154px}.flag.flag-ve{background-position:-80px -154px}.flag.flag-gm{background-position:-256px -44px}.flag.flag-fm{background-position:-48px -44px}.flag.flag-mg{background-position:-128px -88px}.flag.flag-mh{background-position:-144px -88px}.flag.flag-tc{background-position:-224px -132px}.flag.flag-id{background-position:-256px -55px}.flag.flag-tw{background-position:-192px -143px}.flag.flag-so{background-position:-80px -132px}.flag.flag-pg{background-position:-128px -110px}.flag.flag-hk{background-position:-144px -55px}.flag.flag-mt{background-position:-32px -99px}.flag.flag-do{background-position:-96px -33px}.flag.flag-gg{background-position:-192px -44px}.flag.flag-nr{background-position:-16px -110px}.flag.flag-mp{background-position:-240px -88px}.flag.flag-mw{background-position:-80px -99px}.flag.flag-bb{background-position:0 -11px}.flag.flag-hu{background-position:-224px -55px}.flag.flag-xk{background-position:-208px -154px}.flag.flag-za{background-position:-256px -154px}.flag.flag-zanzibar{background-position:0 -165px}.flag.flag-sy{background-position:-192px -132px}.flag.flag-bi{background-position:-96px -11px}.flag.flag-qa{background-position:-32px -121px}.flag.flag-kurdistan{background-position:-96px -77px}.flag.flag-scotland{background-position:-176px -121px}.flag.flag-gf{background-position:-160px -44px}.flag.flag-tk{background-position:-64px -143px}.flag.flag-me{background-position:-112px -88px}.flag.flag-om{background-position:-64px -110px}.flag.flag-tv{background-position:-176px -143px}.flag.flag-at{background-position:-176px 0}.flag.flag-by{background-position:-256px -11px}.flag.flag-wf{background-position:-176px -154px}.flag.flag-ph{background-position:-144px -110px}.flag.flag-ke{background-position:-240px -66px}.flag.flag-ng{background-position:-208px -99px}.flag.flag-eh{background-position:-176px -33px}.flag.flag-yt{background-position:-240px -154px}.flag.flag-cg{background-position:-80px -22px}.flag.flag-br{background-position:-176px -11px}.flag.flag-ma{background-position:-64px -88px}.flag.flag-bm{background-position:-128px -11px}.flag.flag-gi{background-position:-224px -44px}.flag.flag-mn{background-position:-208px -88px}.flag.flag-eu{background-position:-256px -33px}.flag.flag-us{background-position:0 -154px}.flag.flag-uy{background-position:-16px -154px}.flag.flag-hn{background-position:-176px -55px}.flag.flag-gp{background-position:-16px -55px}.flag.flag-km{background-position:-32px -77px}.flag.flag-au{background-position:-192px 0}.flag.flag-tz{background-position:-208px -143px}.flag.flag-pt{background-position:-256px -110px}.flag.flag-je{background-position:-176px -66px}.flag.flag-md{background-position:-96px -88px}.flag.flag-pl{background-position:-176px -110px}.flag.flag-cr{background-position:-208px -22px}.flag.flag-sk{background-position:-16px -132px}.flag.flag-kg{background-position:-256px -66px}.flag.flag-nu{background-position:-32px -110px}.flag.flag-lr{background-position:-240px -77px}.flag.flag-ht{background-position:-208px -55px}.flag.flag-rw{background-position:-112px -121px}.flag.flag-sg{background-position:-224px -121px}.flag.flag-ag{background-position:-48px 0}.flag.flag-mx{background-position:-96px -99px}.flag.flag-ch{background-position:-96px -22px}.flag.flag-sz{background-position:-208px -132px}.flag.flag-dj{background-position:-48px -33px}.flag.flag-kn{background-position:-48px -77px}.flag.flag-england{background-position:-192px -33px}.flag.flag-ro{background-position:-64px -121px}.flag.flag-ca{background-position:-16px -22px}.flag.flag-tr{background-position:-144px -143px}.flag.flag-pa{background-position:-80px -110px}.flag.flag-ye{background-position:-224px -154px}.flag.flag-si{background-position:-256px -121px}.flag.flag-tt{background-position:-160px -143px}.flag.flag-ml{background-position:-176px -88px}.flag.flag-sl{background-position:-32px -132px}.flag.flag-sa{background-position:-128px -121px}.flag.flag-py{background-position:-16px -121px}.flag.flag-ad{background-position:0 0}.flag.flag-gy{background-position:-128px -55px}.flag.flag-ls{background-position:-256px -77px}.flag.flag-sj{background-position:0 -132px}.flag.flag-fk{background-position:-32px -44px}.flag.flag-kw{background-position:-112px -77px}.flag.flag-sm{background-position:-48px -132px}.flag.flag-vn{background-position:-128px -154px}.flag.flag-iq{background-position:-96px -66px}.flag.flag-ie{background-position:0 -66px}.flag.flag-mz{background-position:-128px -99px}.flag.flag-vg{background-position:-96px -154px}.flag.flag-ms{background-position:-16px -99px}.flag.flag-cw{background-position:-256px -22px}.flag.flag-bt{background-position:-208px -11px}.flag.flag-gn{background-position:0 -55px}.flag.flag-uz{background-position:-32px -154px}.flag.flag-cv{background-position:-240px -22px}.flag.flag-pw{background-position:0 -121px}.flag.flag-bv{background-position:-224px -11px}.flag.flag-lb{background-position:-176px -77px}.flag.flag-sn{background-position:-64px -132px}.flag.flag-la{background-position:-160px -77px}.flag.flag-pe{background-position:-96px -110px}.flag.flag-sx{background-position:-176px -132px}.flag.flag-fr{background-position:-80px -44px}.flag.flag-catalonia{background-position:-32px -22px}.flag.flag-kh{background-position:0 -77px}.flag.flag-jp{background-position:-224px -66px}.flag.flag-vc{background-position:-64px -154px}.flag.flag-hm{background-position:-160px -55px}.flag.flag-tl{background-position:-80px -143px}.flag.flag-no{background-position:-256px -99px}.flag.flag-ee{background-position:-144px -33px}.flag.flag-cz{background-position:-16px -33px}.flag.flag-gw{background-position:-112px -55px}.flag.flag-ai{background-position:-64px 0}.flag.flag-ar{background-position:-144px 0}.flag.flag-co{background-position:-192px -22px}.flag.flag-na{background-position:-144px -99px}.flag.flag-er{background-position:-208px -33px}.flag.flag-pm{background-position:-192px -110px}.flag.flag-bg{background-position:-64px -11px}.flag.flag-sr{background-position:-112px -132px}.flag.flag-cm{background-position:-160px -22px}.flag.flag-il{background-position:-16px -66px}.flag.flag-tibet{background-position:-32px -143px}.flag.flag-lk{background-position:-224px -77px}.flag.flag-et{background-position:-240px -33px}.flag.flag-rs{background-position:-80px -121px}.flag.flag-th{background-position:-16px -143px}.flag.flag-tm{background-position:-96px -143px}.flag.flag-fj{background-position:-16px -44px}.flag.flag-ki{background-position:-16px -77px}.flag.flag-re{background-position:-48px -121px}.flag.flag-nf{background-position:-192px -99px}.flag.flag-kz{background-position:-144px -77px}.flag.flag-nc{background-position:-160px -99px}.flag.flag-bn{background-position:-144px -11px}.flag.flag-gb{background-position:-112px -44px}.flag.flag-mq{background-position:-256px -88px}.flag.flag-sc{background-position:-160px -121px}.flag.flag-gu{background-position:-96px -55px}.flag.flag-io{background-position:-80px -66px}.flag.flag-cd{background-position:-48px -22px}.flag.flag-tg{background-position:0 -143px}.flag.flag-sv{background-position:-160px -132px}.flag.flag-jo{background-position:-208px -66px}.flag.flag-ua{background-position:-224px -143px}.flag.flag-ga{background-position:-96px -44px}.flag.flag-cu{background-position:-224px -22px}.flag.flag-va{background-position:-48px -154px}.flag.flag-mu{background-position:-48px -99px}.flag.flag-hr{background-position:-192px -55px}.flag.flag-to{background-position:-128px -143px}.flag.flag-bh{background-position:-80px -11px}.flag.flag-ec{background-position:-128px -33px}.flag.flag-ug{background-position:-240px -143px}.flag.flag-de{background-position:-32px -33px}.flag.flag-gq{background-position:-32px -55px}.flag.flag-bd{background-position:-16px -11px}.flag.flag-bs{background-position:-192px -11px}.flag.flag-ck{background-position:-128px -22px}.flag.flag-gd{background-position:-128px -44px}.flag.flag-sh{background-position:-240px -121px}.flag.flag-be{background-position:-32px -11px}.flag.flag-mr{background-position:0 -99px}.flag.flag-tj{background-position:-48px -143px}.flag.flag-gl{background-position:-240px -44px}.flag.flag-as{background-position:-160px 0}.flag.flag-es{background-position:-224px -33px}.flag.flag-zm{background-position:-16px -165px}.flag.flag-wales{background-position:-160px -154px}.flag.flag-np{background-position:0 -110px}.flag.flag-lu{background-position:-16px -88px}.flag.flag-st{background-position:-144px -132px}.flag.flag-ao{background-position:-128px 0}.flag.flag-cf{background-position:-64px -22px}.flag.flag-az{background-position:-240px 0}.flag.flag-bw{background-position:-240px -11px}.flag.flag-nz{background-position:-48px -110px}.flag.flag-cy{background-position:0 -33px}.flag.flag-ne{background-position:-176px -99px}.flag.flag-kp{background-position:-64px -77px}.flag.flag-gs{background-position:-64px -55px}.flag.flag-mk{background-position:-160px -88px}.flag.flag-mo{background-position:-224px -88px}.flag.flag-jm{background-position:-192px -66px}.flag.flag-ws{background-position:-192px -154px}.flag.flag-lc{background-position:-192px -77px}.flag.flag-an{background-position:-112px 0}.flag.flag-gh{background-position:-208px -44px}.flag.flag-im{background-position:-48px -66px}.flag.flag-is{background-position:-128px -66px}.flag.flag-ae{background-position:-16px 0}.flag.flag-it{background-position:-144px -66px}.flag.flag-ss{background-position:-128px -132px}.flag.flag-ly{background-position:-48px -88px}.flag.flag-mv{background-position:-64px -99px}.flag.flag-ir{background-position:-112px -66px}.flag.flag-gt{background-position:-80px -55px}.flag.flag-bz{background-position:0 -22px}.flag.flag-dz{background-position:-112px -33px}.flag.flag-lt{background-position:0 -88px}.flag.flag-sd{background-position:-192px -121px}.flag.flag-pk{background-position:-160px -110px}.flag.flag-ru{background-position:-96px -121px}.flag.flag-pn{background-position:-208px -110px}.flag.flag-cn{background-position:-176px -22px}.flag.flag-aw{background-position:-208px 0} "],
-                    host: {
-                        '(document:click)': 'hideDropdown($event)'
-                    },
+                    host: {},
                     providers: [COUNTER_CONTROL_ACCESSOR, VALIDATOR]
                 },] },
     ];
     /** @nocollapse */
     PhoneNumberComponent.ctorParameters = function () { return [
         { type: CountryService },
-        { type: ElementRef }
+        { type: ElementRef },
+        { type: HttpClient }
     ]; };
     PhoneNumberComponent.propDecorators = {
         placeholder: [{ type: Input }],
         errorTextRequired: [{ type: Input }],
-        maxlength: [{ type: Input }],
+        errorTextEmpty: [{ type: Input }],
         defaultCountry: [{ type: Input }],
-        allowDropdown: [{ type: Input }],
         type: [{ type: Input }],
         formControl: [{ type: Input }],
+        formControlCountry: [{ type: Input }],
         allowedCountries: [{ type: Input }],
+        geoLookupAddr: [{ type: Input }],
+        geoLookupField: [{ type: Input }],
         onCountryCodeChanged: [{ type: Output }],
         phoneNumberInput: [{ type: ViewChild, args: ['phoneNumberInput',] }]
     };
@@ -2320,7 +2303,9 @@ var InternationalPhoneNumberModule = /** @class */ (function () {
                     imports: [
                         CommonModule,
                         FormsModule,
-                        ReactiveFormsModule
+                        ReactiveFormsModule,
+                        MatSelectModule,
+                        MatInputModule
                     ],
                     declarations: [
                         PhoneNumberComponent,

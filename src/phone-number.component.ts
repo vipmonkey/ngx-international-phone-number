@@ -1,16 +1,15 @@
 import {
-    Component, ElementRef, forwardRef, HostListener,
+    Component, ElementRef, forwardRef,
     Input, OnInit, Output, EventEmitter, ViewChild
 } from '@angular/core';
 import {
-    ControlValueAccessor, FormControl, Validator,
+    ControlValueAccessor, FormControl, Validator, Validators,
     ValidationErrors, NG_VALIDATORS, NG_VALUE_ACCESSOR
 } from '@angular/forms';
 import * as glibphone from 'google-libphonenumber';
 import {Country} from './country.model';
 import {CountryService} from './country.service';
-import {MatSelectModule} from '@angular/material/select';
-import {MatInputModule} from '@angular/material/input';
+import {HttpClient} from '@angular/common/http';
 
 const PLUS = '+';
 
@@ -30,22 +29,22 @@ const VALIDATOR = {
     selector: 'international-phone-number',
     templateUrl: './phone-number.component.html',
     styleUrls: ['./phone-number.component.scss', './assets/css/flags.min.css'],
-    host: {
-        '(document:click)': 'hideDropdown($event)'
-    },
+    host: {},
     providers: [COUNTER_CONTROL_ACCESSOR, VALIDATOR]
 })
 export class PhoneNumberComponent
     implements OnInit, ControlValueAccessor, Validator {
     // input
     @Input() placeholder = 'Enter phone number'; // default
-    @Input() errorTextRequired = 'Phonenumber is reqired';
-    @Input() maxlength = 15; // default
+    @Input() errorTextRequired = 'Phone number is required';
+    @Input() errorTextEmpty = 'Phone number is required';
     @Input() defaultCountry: string;
-    @Input() allowDropdown = true;
     @Input() type = 'text';
-    @Input() formControl = new FormControl();
+    @Input() formControl = new FormControl('', [Validators.maxLength(20)]);
+    @Input() formControlCountry = new FormControl('', [Validators.required]);
     @Input() allowedCountries: Country[];
+    @Input() geoLookupAddr = '';
+    @Input() geoLookupField = '';
 
     @Output() onCountryCodeChanged: EventEmitter<any> = new EventEmitter();
 
@@ -59,8 +58,7 @@ export class PhoneNumberComponent
     countries: Country[];
     selectedCountry: Country;
     countryFilter: string;
-    showDropdown = false;
-    phoneNumber = '';
+    preventCircular = false;
 
     value = '';
 
@@ -87,10 +85,30 @@ export class PhoneNumberComponent
 
     constructor(
         private countryService: CountryService,
-        phoneComponent: ElementRef
+        phoneComponent: ElementRef,
+        private httpClient: HttpClient
     ) {
         this.phoneComponent = phoneComponent;
     }
+
+    writeValue(obj: any): void {
+    }
+
+    private geoLookup(): void {
+        this.httpClient.get(this.geoLookupAddr).subscribe((res) => {
+            if (typeof res[this.geoLookupField] === 'string') {
+
+                let geoCountry = this.countries.find(
+                    (
+                        country: Country) => country.countryCode === res[this.geoLookupField].toLowerCase()
+                );
+                if (geoCountry) {
+                    this.defaultCountry = geoCountry.countryCode;
+                }
+            }
+        });
+    }
+
 
     ngOnInit(): void {
         if (this.allowedCountries && this.allowedCountries.length) {
@@ -99,35 +117,22 @@ export class PhoneNumberComponent
             this.countries = this.countryService.getCountries();
         }
         this.orderCountriesByName();
-    }
 
-    /**
-     * Sets the selected country code to given country
-     * @param event
-     * @param countryCode
-     */
-    updateSelectedCountry(event: Event, countryCode: string) {
-        event.preventDefault();
-        this.updatePhoneInput(countryCode);
-        this.onCountryCodeChanged.emit(countryCode);
-        this.updateValue();
-        // focus on phone number input field
-        setTimeout(() => this.phoneNumberInput.nativeElement.focus());
-    }
-
-    /**
-     * Updates the phone number
-     * @param event
-     */
-    updatePhoneNumber(event: Event) {
-        if (PhoneNumberComponent.startsWithPlus(this.phoneNumber)) {
-            this.findPrefix(this.phoneNumber.split(PLUS)[1]);
-        } else {
-            this.selectedCountry = null;
+        if (this.geoLookupAddr.length > 0) {
+            this.geoLookup();
         }
 
-        this.updateValue();
+
+        this.formControlCountry.valueChanges.subscribe(
+            (countryCode) => {
+                if (!this.preventCircular) {
+                    this.updatePhoneInput(countryCode);
+                    setTimeout(() => this.phoneNumberInput.nativeElement.focus());
+                }
+            }
+        );
     }
+
 
     /**
      * @param prefix
@@ -138,6 +143,7 @@ export class PhoneNumberComponent
         );
         if (foundPrefixes && foundPrefixes.length) {
             this.selectedCountry = PhoneNumberComponent.reducePrefixes(foundPrefixes);
+            this.formControlCountry.setValue(this.selectedCountry.countryCode);
         } else {
             this.selectedCountry = null;
         }
@@ -157,6 +163,7 @@ export class PhoneNumberComponent
      * @param fn
      */
     registerOnTouched(fn: Function) {
+        console.log('registerOnTouched');
         this.onTouch = fn;
     }
 
@@ -165,28 +172,10 @@ export class PhoneNumberComponent
      * @param fn
      */
     registerOnChange(fn: Function) {
+        console.log('registerOnChange');
         this.onModelChange = fn;
     }
 
-    /**
-     *
-     * @param value
-     */
-    writeValue(value: string) {
-        this.value = value || '';
-        this.phoneNumber = this.value;
-
-        if (PhoneNumberComponent.startsWithPlus(this.value)) {
-            this.findPrefix(this.value.split(PLUS)[1]);
-            if (this.selectedCountry) {
-                this.updatePhoneInput(this.selectedCountry.countryCode);
-            }
-        }
-
-        if (this.defaultCountry) {
-            this.updatePhoneInput(this.defaultCountry);
-        }
-    }
 
     /**
      * Validation
@@ -194,7 +183,7 @@ export class PhoneNumberComponent
      */
     validate(c: FormControl): ValidationErrors | null {
         let value = c.value;
-        // let selectedDialCode = this.getSelectedCountryDialCode();
+
         let validationError: ValidationErrors = {
             phoneEmptyError: {
                 valid: false
@@ -202,14 +191,25 @@ export class PhoneNumberComponent
         };
 
         if (c.hasError('reqired')) {
-            // if (value && selectedDialCode)
-            //     value = value.replace(/\s/g, '').replace(selectedDialCode, '');
-
-            // if (!value) return validationError;
             return validationError;
         }
 
         if (value) {
+
+            if (this.defaultCountry && !this.selectedCountry && value[0] !== PLUS) {
+                this.updatePhoneInput(this.defaultCountry);
+            } else {
+                if (PhoneNumberComponent.startsWithPlus(value)) {
+                    this.preventCircular = true;
+                    this.findPrefix(value.split(PLUS)[1]);
+                    this.preventCircular = false;
+                }
+
+                if (this.selectedCountry && value[0] !== PLUS) {
+                    this.updatePhoneInput(this.selectedCountry.countryCode);
+                }
+            }
+
             // validating number using the google's lib phone
             const phoneUtil = glibphone.PhoneNumberUtil.getInstance();
             try {
@@ -227,7 +227,7 @@ export class PhoneNumberComponent
      * Updates the value and trigger changes
      */
     private updateValue() {
-        this.value = this.phoneNumber.replace(/ /g, '');
+        this.value = this.formControl.value.replace(/ /g, '');
         this.onModelChange(this.value);
         this.onTouch();
     }
@@ -238,25 +238,27 @@ export class PhoneNumberComponent
      */
     private updatePhoneInput(countryCode: string) {
         let newInputValue: string = PhoneNumberComponent.startsWithPlus(
-            this.phoneNumber
+            this.formControl.value
         )
-            ? `${this.phoneNumber
+            ? `${this.formControl.value
                 .split(PLUS)[1]
                 .substr(
                     this.selectedCountry.dialCode.length,
-                    this.phoneNumber.length
+                    this.formControl.value.length
                 )}`
-            : this.phoneNumber;
+            : this.formControl.value;
 
         this.selectedCountry = this.countries.find(
             (country: Country) => country.countryCode === countryCode
         );
         if (this.selectedCountry) {
-            this.phoneNumber = `${PLUS}${
+            this.formControl.setValue(`${PLUS}${
                 this.selectedCountry.dialCode
-                } ${newInputValue.replace(/ /g, '')}`;
+                } ${newInputValue.replace(/ /g, '')}`);
+            this.updateValue();
         } else {
-            this.phoneNumber = `${newInputValue.replace(/ /g, '')}`;
+            this.formControl.setValue(`${newInputValue.replace(/ /g, '')}`);
+            this.updateValue();
         }
     }
 
@@ -267,7 +269,6 @@ export class PhoneNumberComponent
         if (this.selectedCountry) {
             return PLUS + this.selectedCountry.dialCode;
         }
-        ;
         return null;
     }
 }

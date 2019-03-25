@@ -1846,9 +1846,7 @@ const VALIDATOR &#x3D; {
     selector: &#x27;international-phone-number&#x27;,
     templateUrl: &#x27;./phone-number.component.html&#x27;,
     styleUrls: [&#x27;./phone-number.component.scss&#x27;, &#x27;./assets/css/flags.min.css&#x27;],
-    host: {
-        &#x27;(document:click)&#x27;: &#x27;hideDropdown($event)&#x27;
-    },
+    host: {    },
     providers: [COUNTER_CONTROL_ACCESSOR, VALIDATOR]
 })
 export class PhoneNumberComponent
