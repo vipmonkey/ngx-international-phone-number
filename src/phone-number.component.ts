@@ -122,8 +122,6 @@ export class PhoneNumberComponent
             this.geoLookup();
         }
 
-        console.log(this.formControlName);
-
         this.formControlCountry.valueChanges.subscribe(
             (countryCode) => {
                 if (!this.preventCircular) {
