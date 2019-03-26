@@ -1,3 +1,9 @@
+international-phone-number {
+  display: inline-block;
+  position: relative;
+  text-align: left;
+}
+
 .flagSelector {
   max-width: 40px;
 }
@@ -23,7 +29,5 @@
 
 .phoneWrapper {
   width: 180px;
-  display: inline-block;
-  position: relative;
-  text-align: left;
+
 }
