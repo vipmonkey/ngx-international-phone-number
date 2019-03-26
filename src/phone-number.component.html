@@ -17,7 +17,7 @@
             </mat-option>
         </mat-select>
     </mat-form-field>
-    <mat-form-field>
+    <mat-form-field class='phoneInput'>
         <input matInput [formControl]="formControl" [placeholder]="placeholder" [type]="type" validate
                #phoneNumberInput>
         <mat-error *ngIf="formControl.hasError('phoneEmptyError') && formControl.dirty && formControl.touched">

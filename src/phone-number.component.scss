@@ -2,6 +2,10 @@
   max-width: 40px;
 }
 
+.phoneInput {
+  max-width: calc(100% - 40px);
+}
+
 .defaultCountry {
   background: url("https://res.cloudinary.com/dvbuhh0bl/image/upload/c_scale,h_15,w_15/v1495279723/default_tmey2r.png") no-repeat;
   display: inline-block;
@@ -15,4 +19,11 @@
 
 .dial-code {
   color: #999;
+}
+
+.phoneWrapper {
+  width: 180px;
+  display: inline-block;
+  position: relative;
+  text-align: left;
 }
