@@ -1,4 +1,4 @@
-international-phone-number {
+:host, international-phone-number {
   display: inline-block;
   position: relative;
   text-align: left;
@@ -10,6 +10,7 @@ international-phone-number {
 
 .phoneInput {
   max-width: calc(100% - 40px);
+  width: 100%;
 }
 
 .defaultCountry {
@@ -28,6 +29,6 @@ international-phone-number {
 }
 
 .phoneWrapper {
-  width: 180px;
+  width: 100%;
 
 }

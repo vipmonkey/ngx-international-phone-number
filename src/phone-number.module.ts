@@ -7,6 +7,7 @@ import { CountryPipe } from './country.pipe';
 import { CountryService } from './country.service';
 import {MatSelectModule} from '@angular/material/select';
 import {MatInputModule} from '@angular/material/input';
+import {MatIconModule} from '@angular/material/icon';
 
 @NgModule({
     imports: [
@@ -14,7 +15,8 @@ import {MatInputModule} from '@angular/material/input';
         FormsModule,
         ReactiveFormsModule,
         MatSelectModule,
-        MatInputModule
+        MatInputModule,
+        MatIconModule
     ],
     declarations: [
         PhoneNumberComponent,

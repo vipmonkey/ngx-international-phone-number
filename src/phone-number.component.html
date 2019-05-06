@@ -23,5 +23,6 @@
         <mat-error *ngIf="formControl.hasError('phoneEmptyError') && formControl.dirty && formControl.touched">
             {{errorTextEmpty}}
         </mat-error>
+        <mat-icon matSuffix *ngIf="formControl.valid && useMatIcon">{{matIconToUse}}</mat-icon>
     </mat-form-field>
 </div>

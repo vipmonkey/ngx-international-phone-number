@@ -30,7 +30,7 @@ const VALIDATOR = {
     templateUrl: './phone-number.component.html',
     styleUrls: ['./phone-number.component.scss', './assets/css/flags.min.css'],
     host: {},
-    providers: [COUNTER_CONTROL_ACCESSOR, VALIDATOR]
+    providers: [COUNTER_CONTROL_ACCESSOR, VALIDATOR],
 })
 export class PhoneNumberComponent
     implements OnInit, ControlValueAccessor, Validator {
@@ -45,6 +45,8 @@ export class PhoneNumberComponent
     @Input() allowedCountries: Country[];
     @Input() geoLookupAddr = '';
     @Input() geoLookupField = '';
+    @Input() useMatIcon = true;
+    @Input() matIconToUse = 'check';
 
     @Output() onCountryCodeChanged: EventEmitter<any> = new EventEmitter();
 
@@ -162,7 +164,6 @@ export class PhoneNumberComponent
      * @param fn
      */
     registerOnTouched(fn: Function) {
-        console.log('registerOnTouched');
         this.onTouch = fn;
     }
 
@@ -171,7 +172,6 @@ export class PhoneNumberComponent
      * @param fn
      */
     registerOnChange(fn: Function) {
-        console.log('registerOnChange');
         this.onModelChange = fn;
     }
 
